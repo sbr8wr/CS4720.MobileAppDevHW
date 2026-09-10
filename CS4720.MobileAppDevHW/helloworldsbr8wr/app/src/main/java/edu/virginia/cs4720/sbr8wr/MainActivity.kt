@@ -28,57 +28,45 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Helloworldsbr8wrTheme {
-                TipsCalculator()
+                HelloWorld()
+                }
             }
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    Greeting(
-//                        name = "Android",
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-//                }
-//            }
         }
     }
-}
+
 
 @Preview(showBackground = true)
 @Composable
-fun TipsCalculator(){
-    var billText by remember { mutableStateOf("") }
-    var tipsPercent by remember {mutableStateOf(20)}
+fun HelloWorld(){
+    var name by remember {mutableStateOf("Your name here")}
+    val salutations = listOf("Hello", "Hi There", "Bonjour")
 
-    val newBillText = billText.toDoubleOrNull() ?: 0.0
-    val total = newBillText + newBillText * (tipsPercent/100.0)
+    var selectedSalutation by remember { mutableStateOf(salutations[0])}
 
     Column(modifier = Modifier.padding(24.dp)) {
         Text(
-            text = "Tips Calculator"
+            text = "$selectedSalutation, $name!"
         )
 
         TextField(
-            value = billText,
-            onValueChange = { billText = it },
-            label = {Text("Bill amount")}
+            value = name,
+            onValueChange = { name = it },
+            label = {Text("Enter your name")}
         )
 
         Row {
-            listOf(15, 18, 20, 25).forEach { pct ->
+            salutations.forEach { text ->
                 Button(
-                    onClick = { tipsPercent = pct },
+
+                    onClick = { selectedSalutation = text },
                     modifier = Modifier.padding(end=8.dp)
 
                 ) {
-                    Text("$pct")
+                    Text(text)
                 }
             }
-
         }
-
-        Text("Total: $total")
-
     }
-
-
 }
 
 //@Composable
