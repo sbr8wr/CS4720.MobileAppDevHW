@@ -19,3 +19,18 @@ AI Usage:
 - Also used it to help with Color.kt, and Type.kt
 - Type.kt (Change font to Roboto (Sansserif)
 - Color.kt (Hex Values for Color)
+
+HW 2:
+Notes:
+- For the week selector, I decided to use a Dropdown Menu, as I thought it would be the best way to choose a desired week. It would lessen the amount of taps needed compared to an incrementor, and would allow you to go to the desired week directly.
+- Ran into a few issues during setup, and a few issues later on.
+
+AI Usage:
+- Mainly to aid in set-up and fixing some unknown issues.
+- Main issue that constituted most AI usage was Room Dependency setup. Ran into an issue, where ksp kept getting flagged as an unsolved reference.
+- Other usages:
+- Upon finishing first iteration, app kept crashing on launch, asked AI, and told me reason was due to database issues, and suggested updating version=1 to 2, and adding exportschema=false.
+- Also had issues, where app would take long time to launch and would get thread dump error. AI didn't really help.
+- Had it help with UI.Theme(Color, Theme, Type) (Giving color palette for blue and green theme, etc.)
+- Had issues with app taking long time to launch, update, and would freeze. AI brought up that I had forgotten to separate by division and week.
+- Also helped with github, I decided to use a branch for HW2 and had issues merging it back into main.
