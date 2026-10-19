@@ -6,5 +6,5 @@ data class GameUIState(
     val errorMessage: String? = null,
     val division: String = "fbs",
     val year: Int = 2026,
-    val week: Int = 4
+    val week: Int = 7
 )

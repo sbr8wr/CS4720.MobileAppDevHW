@@ -5,11 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -28,31 +24,35 @@ fun GameScreen(vm: GameViewModel) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "NCAA Football Scores",
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            if (state.isLoading && state.games.isNotEmpty()) {
-                Text(
-                    text = "Refreshing...",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(onClick = {
+                Text(
+                    text = "NCAA Football Scores",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Button(onClick = { vm.loadScores() }) {
+                    Text("Refresh")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Controls: Division Toggle & Week Selector
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(onClick = {
                     val newDiv = if (state.division == "fbs") "fcs" else "fbs"
                     vm.setDivision(newDiv)
                 }) {
                     Text("Division: ${state.division.uppercase()}")
                 }
+
                 var expanded by remember { mutableStateOf(false) }
                 Box {
                     OutlinedButton(onClick = { expanded = true }) {
@@ -63,7 +63,7 @@ fun GameScreen(vm: GameViewModel) {
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
-                        for (w in 1..14) {
+                        for (w in 1..15) {
                             DropdownMenuItem(
                                 text = { Text("Week $w") },
                                 onClick = {
@@ -78,6 +78,7 @@ fun GameScreen(vm: GameViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Main Content Area handling Loading, Error, Empty, and Success states
             when {
                 state.isLoading && state.games.isEmpty() -> {
                     Box(
@@ -95,10 +96,11 @@ fun GameScreen(vm: GameViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Error: ${state.errorMessage}",
+                            text = state.errorMessage!!,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.error
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Button(onClick = { vm.loadScores() }) {
                             Text("Retry")
                         }
@@ -112,7 +114,8 @@ fun GameScreen(vm: GameViewModel) {
                     ) {
                         Text(
                             text = "No games this week.",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -124,9 +127,10 @@ fun GameScreen(vm: GameViewModel) {
                         modifier = Modifier.fillMaxSize()
                     ) {
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(state.games) { game ->
+                            items(state.games, key = { it.gameId }) { game ->
                                 GameCard(game = game)
                             }
                         }
