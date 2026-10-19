@@ -25,11 +25,15 @@ Notes:
 - For the week selector, I decided to use a Dropdown Menu, as I thought it would be the best way to choose a desired week. It would lessen the amount of taps needed compared to an incrementor, and would allow you to go to the desired week directly.
 - Ran into a few issues during setup, and a few issues later on.
 
+Issue?:
+- Found issue with data display, weeks 1-6, 8,9 are all the same. Only weeks 7, and 10+ are different / accurate. Not sure if issue with my code, or something else.
+
 AI Usage:
 - Mainly to aid in set-up and fixing some unknown issues.
 - Main issue that constituted most AI usage was Room Dependency setup. Ran into an issue, where ksp kept getting flagged as an unsolved reference.
 - Other usages:
 - Upon finishing first iteration, app kept crashing on launch, asked AI, and told me reason was due to database issues, and suggested updating version=1 to 2, and adding exportschema=false.
+- Also suggested adding .fallbackToDestructiveMigration() to prevent unknown crashes.
 - Also had issues, where app would take long time to launch and would get thread dump error. AI didn't really help.
 - Had it help with UI.Theme(Color, Theme, Type) (Giving color palette for blue and green theme, etc.)
 - Had issues with app taking long time to launch, update, and would freeze. AI brought up that I had forgotten to separate by division and week.
