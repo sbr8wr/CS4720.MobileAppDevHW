@@ -38,3 +38,4 @@ AI Usage:
 - Had it help with UI.Theme(Color, Theme, Type) (Giving color palette for blue and green theme, etc.)
 - Had issues with app taking long time to launch, update, and would freeze. AI brought up that I had forgotten to separate by division and week.
 - Also helped with github, I decided to use a branch for HW2 and had issues merging it back into main.
+- After reviewing code, I came to conclusion that the issue did not lied with the View model and Activity. Had AI help look through and fix that code. Led to the AI making some redesigns. It wanted to also add a circular button to refresh, but it felt redundant with the pull to refresh and the formatting was weird so I removed it.
