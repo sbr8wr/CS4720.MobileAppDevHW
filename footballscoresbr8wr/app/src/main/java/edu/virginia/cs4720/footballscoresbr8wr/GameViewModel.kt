@@ -8,12 +8,14 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class GameViewModel(
     private val repository: GameRepository
 ) : ViewModel() {
 
-    var uiState by mutableStateOf(GameUIState())
+    var uiState by mutableStateOf(GameUIState(week = calculateDefaultWeek()))
         private set
 
     private var observationJob: Job? = null
@@ -21,6 +23,19 @@ class GameViewModel(
     init {
         observeCurrentSelection()
         loadScores()
+    }
+
+    /**
+     * Maps today's date to a week number (1..14).
+     * Season starting late August / early September.
+     */
+    private fun calculateDefaultWeek(): Int {
+        val today = LocalDate.now()
+        val seasonStartDate = LocalDate.of(today.year, 8, 27) // Approx Week 1 start
+        if (today.isBefore(seasonStartDate)) return 1
+
+        val weeksBetween = ChronoUnit.WEEKS.between(seasonStartDate, today).toInt() + 1
+        return weeksBetween.coerceIn(1, 14)
     }
 
     private fun observeCurrentSelection() {
@@ -42,7 +57,7 @@ class GameViewModel(
             } catch (e: Exception) {
                 uiState = uiState.copy(
                     isLoading = false,
-                    errorMessage = e.localizedMessage ?: "Failed to load scores"
+                    errorMessage = e.localizedMessage ?: "Couldn't load scores, check your connection"
                 )
             }
         }

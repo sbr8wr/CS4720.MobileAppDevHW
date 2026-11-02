@@ -20,19 +20,22 @@ data class GameDetails(
     val gameID: String,
 
     @SerialName("gameState")
-    val gameState: String,
+    val gameState: String = "pre",
 
     @SerialName("startDate")
-    val startDate: String,
+    val startDate: String = "",
 
     @SerialName("startTime")
-    val startTime: String,
+    val startTime: String = "",
 
     @SerialName("currentPeriod")
-    val currentPeriod: String,
+    val currentPeriod: String? = "",
 
     @SerialName("contestClock")
-    val contestClock: String,
+    val contestClock: String? = "",
+
+    @SerialName("finalMessage")
+    val finalMessage: String? = "",
 
     @SerialName("home")
     val home: TeamInfo,
@@ -44,10 +47,10 @@ data class GameDetails(
 @Serializable
 data class TeamInfo(
     @SerialName("score")
-    val score: String,
+    val score: String? = "",
 
     @SerialName("winner")
-    val winner: Boolean,
+    val winner: Boolean = false,
 
     @SerialName("names")
     val names: TeamNames
@@ -56,5 +59,8 @@ data class TeamInfo(
 @Serializable
 data class TeamNames(
     @SerialName("short")
-    val shortName: String
+    val shortName: String? = "",
+
+    @SerialName("char6")
+    val char6: String? = ""
 )

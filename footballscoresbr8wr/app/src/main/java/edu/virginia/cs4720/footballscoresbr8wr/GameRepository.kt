@@ -23,17 +23,21 @@ class GameRepository(
                 gameState = game.gameState,
                 startDate = game.startDate,
                 startTime = game.startTime,
-                currentPeriod = game.currentPeriod,
-                contestClock = game.contestClock,
-                homeTeamName = game.home.names.shortName,
-                homeTeamScore = game.home.score,
+                currentPeriod = game.currentPeriod.orEmpty(),
+                contestClock = game.contestClock.orEmpty(),
+                finalMessage = game.finalMessage.orEmpty(),
+                homeTeamName = game.home.names.shortName.takeIf { !it.isNullOrBlank() }
+                    ?: game.home.names.char6.orEmpty().ifBlank { "Home Team" },
+                homeTeamScore = game.home.score.orEmpty(),
                 homeTeamWinner = game.home.winner,
-                awayTeamName = game.away.names.shortName,
-                awayTeamScore = game.away.score,
+                awayTeamName = game.away.names.shortName.takeIf { !it.isNullOrBlank() }
+                    ?: game.away.names.char6.orEmpty().ifBlank { "Away Team" },
+                awayTeamScore = game.away.score.orEmpty(),
                 awayTeamWinner = game.away.winner
             )
         }
 
-        dao.insertGames(entities)
+        // Upsert ensures stale rows are updated, new ones inserted, without duplicates
+        dao.upsertGames(entities)
     }
 }

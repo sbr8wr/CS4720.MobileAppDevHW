@@ -15,127 +15,156 @@ import androidx.compose.ui.unit.dp
 fun GameScreen(vm: GameViewModel) {
     val state = vm.uiState
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("College Football Scores") },
+            )
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
         ) {
+            // Segmented Division Toggle & Dropdown Week Selector Row
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "NCAA Football Scores",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Button(onClick = { vm.loadScores() }) {
-                    Text("Refresh")
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+                    SegmentedButton(
+                        selected = state.division == "fbs",
+                        onClick = { vm.setDivision("fbs") },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                    ) { Text("FBS") }
+                    SegmentedButton(
+                        selected = state.division == "fcs",
+                        onClick = { vm.setDivision("fcs") },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                    ) { Text("FCS") }
                 }
+
+                WeekDropdownSelector(
+                    selectedWeek = state.week,
+                    onWeekSelected = { vm.setWeek(it) },
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            // Always visible linear indicator when fetching updates
+            if (state.isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(4.dp))
+            }
 
-            // Controls: Division Toggle & Week Selector
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(onClick = {
-                    val newDiv = if (state.division == "fbs") "fcs" else "fbs"
-                    vm.setDivision(newDiv)
-                }) {
-                    Text("Division: ${state.division.uppercase()}")
-                }
-
-                var expanded by remember { mutableStateOf(false) }
-                Box {
-                    OutlinedButton(onClick = { expanded = true }) {
-                        Text("Week ${state.week}")
+            // Screen Content State handling
+            Box(modifier = Modifier.fillMaxSize()) {
+                when {
+                    state.isLoading && state.games.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
 
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        for (w in 1..15) {
-                            DropdownMenuItem(
-                                text = { Text("Week $w") },
-                                onClick = {
-                                    vm.setWeek(w)
-                                    expanded = false
-                                }
+                    // Error state (No Internet & No local Room DB cached games)
+                    state.errorMessage != null && state.games.isEmpty() -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Couldn't load scores. Check your network connection.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(onClick = { vm.loadScores() }) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+
+                    // Empty state (Valid request returning zero games)
+                    !state.isLoading && state.games.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No games scheduled for Week ${state.week}.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Main Content Area handling Loading, Error, Empty, and Success states
-            when {
-                state.isLoading && state.games.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                state.errorMessage != null && state.games.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = state.errorMessage!!,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(onClick = { vm.loadScores() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-
-                state.games.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No games this week.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                else -> {
-                    PullToRefreshBox(
-                        isRefreshing = state.isLoading,
-                        onRefresh = { vm.loadScores() },
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                    // Data State: Pull-To-Refresh around LazyColumn
+                    else -> {
+                        PullToRefreshBox(
+                            isRefreshing = state.isLoading,
+                            onRefresh = { vm.loadScores() },
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            items(state.games, key = { it.gameId }) { game ->
-                                GameCard(game = game)
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                items(state.games, key = { it.gameId }) { game ->
+                                    GameCard(game = game)
+                                }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WeekDropdownSelector(
+    selectedWeek: Int,
+    onWeekSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = "Week $selectedWeek",
+            onValueChange = {},
+            readOnly = true,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            (1..14).forEach { w ->
+                DropdownMenuItem(
+                    text = { Text("Week $w") },
+                    onClick = {
+                        onWeekSelected(w)
+                        expanded = false
+                    }
+                )
             }
         }
     }

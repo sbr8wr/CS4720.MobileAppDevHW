@@ -14,6 +14,7 @@ data class GameEntity(
     val startTime: String,
     val currentPeriod: String,
     val contestClock: String,
+    val finalMessage: String,
     val homeTeamName: String,
     val homeTeamScore: String,
     val homeTeamWinner: Boolean,

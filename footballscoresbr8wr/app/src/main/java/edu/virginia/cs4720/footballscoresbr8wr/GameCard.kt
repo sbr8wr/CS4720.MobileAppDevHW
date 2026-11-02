@@ -13,7 +13,7 @@ fun GameCard(game: GameEntity) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -27,25 +27,32 @@ fun GameCard(game: GameEntity) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val stateText = when (game.gameState.lowercase()) {
+                    "live", "in_progress" -> "LIVE"
+                    "final", "post" -> "FINAL"
+                    else -> "UPCOMING"
+                }
+
                 Text(
-                    text = game.gameState.uppercase(),
+                    text = stateText,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (stateText == "LIVE") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
 
                 val statusText = when (game.gameState.lowercase()) {
                     "live", "in_progress" -> {
-                        val clock = if (game.contestClock.isNotBlank() && game.contestClock != "-0:00") game.contestClock else ""
-                        val period = game.currentPeriod.ifBlank { "LIVE" }
+                        val clock = if (game.contestClock.isNotBlank() && game.contestClock != "0:00" && game.contestClock != "-0:00") {
+                            game.contestClock
+                        } else ""
+                        val period = if (game.currentPeriod.isNotBlank()) "Q${game.currentPeriod}" else "LIVE"
                         "$period $clock".trim()
                     }
-                    "final", "complete" -> {
-                        val periodUpper = game.currentPeriod.uppercase()
-                        if (periodUpper.contains("OT") || (periodUpper.isNotBlank() && periodUpper != "4TH" && periodUpper != "FINAL")) {
-                            "FINAL / $periodUpper"
-                        } else {
-                            "FINAL"
+                    "final", "post" -> {
+                        when {
+                            game.finalMessage.isNotBlank() -> game.finalMessage
+                            game.currentPeriod.contains("OT", ignoreCase = true) -> "FINAL / ${game.currentPeriod.uppercase()}"
+                            else -> "FINAL"
                         }
                     }
                     else -> {
@@ -56,47 +63,50 @@ fun GameCard(game: GameEntity) {
 
                 Text(
                     text = statusText,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Away Team (Away vs Home identification)
+            // Away Team
             TeamScoreRow(
                 teamName = game.awayTeamName,
                 score = game.awayTeamScore,
                 isWinner = game.awayTeamWinner,
-                isHome = false
+                isHome = false,
+                isFinal = game.gameState.lowercase() in listOf("final", "post")
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Home Team
             TeamScoreRow(
                 teamName = game.homeTeamName,
                 score = game.homeTeamScore,
                 isWinner = game.homeTeamWinner,
-                isHome = true
+                isHome = true,
+                isFinal = game.gameState.lowercase() in listOf("final", "post")
             )
         }
     }
 }
 
 @Composable
-fun TeamScoreRow(teamName: String, score: String, isWinner: Boolean, isHome: Boolean) {
+fun TeamScoreRow(
+    teamName: String,
+    score: String,
+    isWinner: Boolean,
+    isHome: Boolean,
+    isFinal: Boolean
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = teamName,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (isWinner) FontWeight.Bold else FontWeight.Normal
-            )
-            Spacer(modifier = Modifier.width(8.dp))
             Surface(
                 color = if (isHome) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                 shape = MaterialTheme.shapes.extraSmall
@@ -108,11 +118,17 @@ fun TeamScoreRow(teamName: String, score: String, isWinner: Boolean, isHome: Boo
                     color = if (isHome) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = teamName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isWinner && isFinal) FontWeight.Bold else FontWeight.Normal
+            )
         }
         Text(
-            text = score.ifBlank { "0" },
+            text = score.ifBlank { "-" },
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (isWinner) FontWeight.Bold else FontWeight.Normal
+            fontWeight = if (isWinner && isFinal) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
